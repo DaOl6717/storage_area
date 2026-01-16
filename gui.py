@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import db_ops_gui_and_barcode as db_ops
+
 # ADD PRODUCT FLOW
 # Barcode scan page TODO
 
@@ -70,33 +72,53 @@ class App(ctk.CTk):
 class MainMenu(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
-        label = ctk.CTkLabel(self, text="Storage Management System", font=("Arial", 100))
-        label.pack(pady=30)
+        ctk.CTkLabel(self, text="Storage Management System", font=("Arial", 40)).pack(pady=30)
 
         # Navigation Buttons
-        add_button = ctk.CTkButton(self, text="Add Product", font=("Arial", 75), width=600, height=200,
+        add_button = ctk.CTkButton(self, text="Add Product", font=("Arial", 40), width=325, height=80,
                              command=lambda: controller.show_frame("AddPage"), fg_color="#23d023")
-        add_button.pack(side='left', anchor='e', expand=True, pady=10, padx=50)
+        add_button.pack(side='left', anchor='e', expand=True, pady=10, padx=10)
 
-        remove_button = ctk.CTkButton(self, text="Remove Product", font=("Arial", 75), width=600, height=200,
+        remove_button = ctk.CTkButton(self, text="Remove Product", font=("Arial", 40), width=60, height=80,
                              command=lambda: controller.show_frame("RemovePage"), fg_color='#f72a2a')
-        remove_button.pack(side='right', anchor='w', expand=True, pady=10, padx=50)
+        remove_button.pack(side='right', anchor='w', expand=True, pady=10, padx=10)
 
 # Page 2: Product Add page
 class AddPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
-        label = ctk.CTkLabel(self, text="Add Product", font=("Arial", 100))
-        label.pack(pady=30)
+        self.controller = controller
         
-        label = ctk.CTkLabel(self, text="Please Scan Product Barcode", font=("Arial", 75))
-        label.place(relx=0.5, rely=0.5, anchor='c')
+        ctk.CTkLabel(self, text="Add Product", font=("Arial", 40)).pack(pady=30)
+        self.status_label = ctk.CTkLabel(self, text="Please Scan Product", font=("Arial", 30)).pack(pady=60)
+        
+        self.barcode_entry = ctk.CTkEntry(self, width=600, height=80, font=("Arial", 30), justify="center")
+        self.barcode_entry.pack(pady=0)
+        self.barcode_entry.bind('<Return>', self.process_scan)
+        
+        back_btn = ctk.CTkButton(self, text="Cancel", fg_color="#f72a2a", command=lambda: controller.show_frame("MainMenu"), width=120, height=60, font=("Arial", 30))
+        back_btn.pack(pady=50)
+        
+        self.bind("<Visibility>", lambda e: self.barcode_entry.focus_set())
+        
+    def process_scan(self, event):
+        barcode = self.barcode_entry.get().strip()
+        self.controller.current_item["barcode"] = barcode
+        
+        if db_ops.barcode_exists(barcode):
+            self.controller.show_frame("QuantityPage")
+        else:
+            self.controller.show_frame("NameInputPage")
+        
+        self.controller.current_item["barcode"] = barcode
 
-        # Large "Back" button for touch
-        back_btn = ctk.CTkButton(self, text="Back to Start Page", font=("Arial", 50), fg_color="#f72a2a", 
-                                 command=lambda: controller.show_frame("MainMenu"), width=500, height=200)
-        back_btn.pack(side="bottom", pady=20)
+class QuantityPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        return #TODO
 
+class NameInputPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        return #TODO
 
 
 # --- Page 3: Stats ---
