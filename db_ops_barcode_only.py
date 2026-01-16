@@ -6,7 +6,7 @@ from user_defined_variables import using_barcode_scanner, scan_alt_0, scan_alt_1
 global program_running
 program_running = False
 
-# Database connection, config in credentials.py #TODO: Skriv in dina egna credentials
+# Database connection, config in credentials.py
 db = mysql.connector.connect(
     host=ip_address,
     user=db_username,

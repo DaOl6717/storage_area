@@ -1,6 +1,6 @@
 from user_defined_variables import using_barcode_scanner
-from database_operations_barcode import scanner_menu
-from database_operations_user_input import manual_input_menu
+from db_ops_barcode_only import scanner_menu
+from db_ops_text_inut import manual_input_menu
 
 def main():   
     print("Script started.")
