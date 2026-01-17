@@ -72,6 +72,16 @@ class App(ctk.CTk):
             frame.refresh()
         
         frame.tkraise()
+    
+    def discard_and_home(self):
+        for key in self.current_item:
+            self.current_item[key] = None
+    
+        for frame in self.frames.values():
+            if hasattr(frame, "clear"):
+                frame.clear()
+            
+        self.show_frame("MainMenu")
         
 # Custom on screen keyboard
 class TouchKeyboard(ctk.CTkFrame):
@@ -140,7 +150,7 @@ class MainMenu(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         ctk.CTkLabel(self, text="Storage Management System", font=("Arial", 40)).pack(pady=30)
-
+        
         # Navigation Buttons
         add_button = ctk.CTkButton(self, text="Add Product", font=("Arial", 40), width=325, height=80,
                              command=lambda: controller.show_frame("AddPage"), fg_color="#23d023")
@@ -176,6 +186,9 @@ class AddPage(ctk.CTkFrame):
             self.controller.show_frame("ExpiryInputPage")
         else:
             self.controller.show_frame("NameInputPage")
+
+    def clear(self):
+        self.entry.delete(0, 'end')
         
 # Page 2.1.1: Prouct Name input
 class NameInputPage(ctk.CTkFrame):
@@ -196,6 +209,9 @@ class NameInputPage(ctk.CTkFrame):
         self.controller.current_item["name"] = self.entry.get()
         self.entry.delete(0, 'end') # Clean up for next time
         self.controller.show_frame("BrandInputPage")
+        
+    def clear(self):
+        self.entry.delete(0, 'end')
 
 # Page 2.1.2: Prouct Brand input
 class BrandInputPage(ctk.CTkFrame):
@@ -215,6 +231,9 @@ class BrandInputPage(ctk.CTkFrame):
         self.controller.current_item["brand"] = self.entry.get()
         self.entry.delete(0, 'end')
         self.controller.show_frame("ExpiryInputPage")
+    
+    def clear(self):
+        self.entry.delete(0, 'end')
 
 # Page 2.2: Expiry Date Input
 class ExpiryInputPage(ctk.CTkFrame):
@@ -286,6 +305,9 @@ class ExpiryInputPage(ctk.CTkFrame):
         date_str = f"{self.years[self.y_idx]}-{self.months[self.m_idx]}-{self.days[self.d_idx]}"
         self.controller.current_item["expiry"] = date_str
         self.controller.show_frame("QuantityPage")
+    
+    def clear(self):
+        self.entry.delete(0, 'end')
 
 # Page 2.3: Quantity Input
 class QuantityPage(ctk.CTkFrame): #TODO
@@ -305,6 +327,9 @@ class QuantityPage(ctk.CTkFrame): #TODO
         self.controller.current_item["quantity"] = int(self.entry.get())
         self.entry.delete(0, 'end')
         self.controller.show_frame("SpecifyLocation")
+    
+    def clear(self):
+        self.entry.delete(0, 'end')
 
 # Page 3: Location Scan Page
 class SpecifyLocation(ctk.CTkFrame):
@@ -329,6 +354,9 @@ class SpecifyLocation(ctk.CTkFrame):
         self.controller.current_item["location"] = barcode
         
         self.controller.show_frame("ConfirmAddPage")
+    
+    def clear(self):
+        self.entry.delete(0, 'end')
 
 # Page 4: Confirm and Send to MQTT
 class ConfirmAddPage(ctk.CTkFrame):
