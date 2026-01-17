@@ -174,7 +174,7 @@ class NameInputPage(ctk.CTkFrame): #TODO
         super().__init__(parent)
         self.controller = controller
         
-        ctk.CTkLabel(self, text="Enter the name of the product", font=("Arial", 40)).pack(pady=30)
+        #ctk.CTkLabel(self, text="Enter the name of the product", font=("Arial", 40)).pack(pady=30)
         
         # Layout the Entry fields
         ctk.CTkLabel(self, text="Product Name:", font=("Arial", 25)).pack(pady=5)
