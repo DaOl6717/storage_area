@@ -84,20 +84,20 @@ class TouchKeyboard(ctk.CTkFrame):
             row_frame = ctk.CTkFrame(self, fg_color="transparent")
             row_frame.pack(pady=2)
             for key in row:
-                ctk.CTkButton(row_frame, text=key, width=80, height=80, font=("Arial", 32),
+                ctk.CTkButton(row_frame, text=key, width=75, height=75, font=("Arial", 32),
                               command=lambda k=key: self.target_entry.insert("insert", k)).pack(side="left", padx=2)
 
         # Controls
         ctrl_frame = ctk.CTkFrame(self, fg_color="transparent")
         ctrl_frame.pack(pady=10)
 
-        ctk.CTkButton(ctrl_frame, text="«", width=120, height=80, fg_color="#d35400",
+        ctk.CTkButton(ctrl_frame, text="«", width=120, height=75, fg_color="#d35400",
                       command=lambda: self.target_entry.delete(len(self.target_entry.get())-1, "end")).pack(side="left", padx=5)
         
-        ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=80,
+        ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=75,
                       command=lambda: self.target_entry.insert("insert", " ")).pack(side="left", padx=5)
 
-        ctk.CTkButton(ctrl_frame, text="»", width=120, height=80, fg_color="#23d023",
+        ctk.CTkButton(ctrl_frame, text="»", width=120, height=75, fg_color="#23d023",
                       command=enter_command).pack(side="left", padx=5)
 
 # Custom on screen numpad
