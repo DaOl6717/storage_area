@@ -240,11 +240,6 @@ class ExpiryInputPage(ctk.CTkFrame):
 
         self.columns_frame.grid_columnconfigure((0,1,2), weight=1)
 
-        # Summary and Finish
-        self.summary_label = ctk.CTkLabel(self, text="", font=("Arial", 30), fg_color="gray20", corner_radius=10, width=400)
-        self.summary_label.pack(pady=20)
-        self.update_summary()
-
         self.ok_btn = ctk.CTkButton(self, text="Confirm & Next", width=400, height=90, 
                                    fg_color="#23d023", font=("Arial", 35),
                                    command=self.finish)
@@ -281,12 +276,6 @@ class ExpiryInputPage(ctk.CTkFrame):
         elif type_name == "day":
             self.d_idx = (self.d_idx + delta) % len(self.days)
             self.day_label.configure(text=self.days[self.d_idx])
-        
-        self.update_summary()
-
-    def update_summary(self):
-        date_str = f"{self.years[self.y_idx]}-{self.months[self.m_idx]}-{self.days[self.d_idx]}"
-        self.summary_label.configure(text=f"Selected: {date_str}")
 
     def finish(self):
         date_str = f"{self.years[self.y_idx]}-{self.months[self.m_idx]}-{self.days[self.d_idx]}"
