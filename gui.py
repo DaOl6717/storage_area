@@ -1,3 +1,4 @@
+from datetime import datetime
 import customtkinter as ctk
 import db_operations_backend as db_ops
 
@@ -53,7 +54,7 @@ class App(ctk.CTk):
         self.frames = {}
 
         # Initialize all pages
-        for PageClass in (MainMenu, AddPage, RemovePage, QuantityPage, NameInputPage, BrandInputPage):
+        for PageClass in (MainMenu, AddPage, RemovePage, QuantityPage, NameInputPage, BrandInputPage, ExpiryInputPage):
             page_name = PageClass.__name__
             frame = PageClass(parent=self, controller=self)
             self.frames[page_name] = frame
@@ -64,7 +65,6 @@ class App(ctk.CTk):
         self.show_frame("MainMenu")
 
     def show_frame(self, page_name):
-        """Bring a specific frame to the front"""
         frame = self.frames[page_name]
         frame.tkraise()
         
@@ -128,7 +128,7 @@ class TouchNumpad(ctk.CTkFrame):
                     continue
                     
                 ctk.CTkButton(row_frame, text=key, width=70, height=70, font=("Arial", 22),
-                              command=lambda k=key: self.target_entry.insert("insert", k)).pack(side="left", padx=2)   
+                              command=lambda k=key: self.target_entry.insert("insert", k)).pack(side="left", padx=2)
 
 # Page 1: Main Menu
 class MainMenu(ctk.CTkFrame):
@@ -168,11 +168,9 @@ class AddPage(ctk.CTkFrame):
         self.controller.current_item["barcode"] = barcode
         
         if db_ops.barcode_exists(barcode):
-            self.controller.show_frame("QuantityPage")
+            self.controller.show_frame("ExpiryInputPage")
         else:
             self.controller.show_frame("NameInputPage")
-        
-        self.controller.current_item["barcode"] = barcode
         
 # Page 2.1: Prouct Name input
 class NameInputPage(ctk.CTkFrame):
@@ -211,9 +209,77 @@ class BrandInputPage(ctk.CTkFrame):
     def next_step(self):
         self.controller.current_item["brand"] = self.entry.get()
         self.entry.delete(0, 'end')
+        self.controller.show_frame("ExpiryInputPage")
+
+# Page 2.3: Expiry Date Input
+class ExpiryInputPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        # Internal state
+        self.sel_year = str(datetime.now().year)
+        self.sel_month = f"{datetime.now().month:02d}"
+        self.sel_day = "01"
+
+        ctk.CTkLabel(self, text="Select Expiry Date", font=("Arial", 40)).pack(pady=10)
+
+        self.columns_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.columns_frame.pack(expand=True, fill="both", padx=20)
+
+        self.year_frame = self.create_scroll_column("Year", [str(datetime.now().year + i) for i in range(10)], self.set_year)
+        self.year_frame.grid(row=0, column=0, padx=10, sticky="nsew")
+        months = [f"{i:02d}" for i in range(1, 13)]
+        self.month_frame = self.create_scroll_column("Month", months, self.set_month)
+        self.month_frame.grid(row=0, column=1, padx=10, sticky="nsew")
+        days = [f"{i:02d}" for i in range(1, 32)]
+        self.day_frame = self.create_scroll_column("Day", days, self.set_day)
+        self.day_frame.grid(row=0, column=2, padx=10, sticky="nsew")
+
+        self.columns_frame.grid_columnconfigure((0,1,2), weight=1)
+
+        self.summary_label = ctk.CTkLabel(self, text=f"Selected: {self.sel_year}-{self.sel_month}-{self.sel_day}", font=("Arial", 25))
+        self.summary_label.pack(pady=10)
+
+        self.ok_btn = ctk.CTkButton(self, text="Confirm Date", width=300, height=80, fg_color="#23d023", font=("Arial", 30),
+                                   command=self.finish)
+        self.ok_btn.pack(pady=20)
+
+    def create_scroll_column(self, title, items, command):
+        container = ctk.CTkFrame(self.columns_frame)
+        ctk.CTkLabel(container, text=title, font=("Arial", 20, "bold")).pack(pady=5)
+        
+        scroll = ctk.CTkScrollableFrame(container, width=150, height=300)
+        scroll.pack(expand=True, fill="both")
+
+        for item in items:
+            btn = ctk.CTkButton(scroll, text=item, font=("Arial", 20), height=50,
+                                fg_color="gray25", command=lambda i=item, c=command: c(i))
+            btn.pack(pady=2, fill="x")
+        return container
+
+    def set_year(self, val): 
+        self.sel_year = val
+        self.update_summary()
+
+    def set_month(self, val): 
+        self.sel_month = val
+        self.update_summary()
+
+    def set_day(self, val): 
+        self.sel_day = val
+        self.update_summary()
+
+    def update_summary(self):
+        self.summary_label.configure(text=f"Selected: {self.sel_year}-{self.sel_month}-{self.sel_day}")
+
+    def finish(self):
+        date_str = f"{self.sel_year}-{self.sel_month}-{self.sel_day}"
+        self.controller.current_item["expiry"] = date_str
+        # Navigate to the next page
         self.controller.show_frame("QuantityPage")
 
-# Page 2.3: Quantity Input
+# Page 2.4: Quantity Input
 class QuantityPage(ctk.CTkFrame): #TODO
     def __init__(self, parent, controller):
         super().__init__(parent)
