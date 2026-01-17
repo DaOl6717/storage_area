@@ -42,7 +42,7 @@ class App(ctk.CTk):
             "location": None,
             "expiry": None
         }
-
+        
         self.title("Pi Navigation System")
         #self.overrideredirect(True)
         self.attributes('-fullscreen', True)
@@ -388,25 +388,27 @@ class ConfirmAddPage(ctk.CTkFrame):
         self.data_container.grid_columnconfigure((0,1), weight=1)
 
     def send_to_system(self):
-        """Packages non-empty data into JSON and sends to MQTT broker."""
+        """Uses the backend helper to send data in the correct format"""
+        data = self.controller.current_item
+        
         try:
-            # Filter out None values for the final payload
-            clean_data = {k: v for k, v in self.controller.current_item.items() if v is not None}
-            payload = json.dumps(clean_data)
-
-            # Attempt to publish
-            topic = "storage/inventory/add"
-            result = self.controller.mqtt_client.publish(topic, payload)
+            # Call your backend function directly
+            # This handles the JSON conversion and the 'action' key for you
             
-            # Check if MQTT publish was successful
-            if result.rc == 0:
-                print(f"Successfully sent to MQTT: {payload}")
-                self.discard_and_home() 
-            else:
-                print(f"MQTT Error Code: {result.rc}")
-                
+            db_ops.add_inventory(
+                quantity=data["quantity"],
+                expiry_date=data["expiry"],
+                barcode=data["barcode"],
+                name=data["name"],
+                brand=data["brand"],
+                location_data=data["location"]
+            )
+            
+            print("Successfully sent add_inventory request to backend")
+            self.discard_and_home() 
+            
         except Exception as e:
-            print(f"Critical Error in MQTT Publish: {e}")
+            print(f"Error calling backend: {e}")
 
     def discard_and_home(self):
         for key in self.controller.current_item:
