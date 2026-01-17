@@ -1,4 +1,6 @@
 import mysql.connector
+import paho.mqtt.publish as publish
+import json
 from datetime import datetime
 from credentials import ip_address, db_username, db_password, db_name
 from user_defined_variables import using_barcode_scanner, scan_alt_0, scan_alt_1, scan_alt_2
