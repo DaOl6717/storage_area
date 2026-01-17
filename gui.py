@@ -1,5 +1,5 @@
 import customtkinter as ctk
-import db_ops_gui_and_barcode as db_ops
+import db_operations_backend as db_ops
 
 # ADD PRODUCT FLOW
 # Barcode scan page TODO
