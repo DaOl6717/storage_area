@@ -31,9 +31,6 @@ def mqtt_request_response(request_topic, response_topic, payload, timeout=2):
         time.sleep(0.05)
     return None
 
-def mqtt_publish(topic, payload_dict):
-    client.publish(topic, json.dumps(payload_dict))
-
 def barcode_exists(barcode):
     response = mqtt_request_response(
         request_topic="storage_room/request/barcode_exists",
@@ -42,13 +39,28 @@ def barcode_exists(barcode):
     )
     return response.get("exists", False) if response else False
 
+def find_id_at_location(location_barcode):
+    response = mqtt_request_response(
+        request_topic="storage_room/request/find_location",
+        response_topic="storage_room/response/find_location",
+        payload={"location": location_barcode}
+    )
+    # Returns the location_id if it exists, else None
+    return response.get("location_id") if response else None
+
 def add_inventory(quantity, expiry_date, barcode, name, brand, location_data):
-    mqtt_publish("storage_room/update", {
-        "action": "add_inventory",
-        "barcode": barcode,
-        "name": name,
-        "brand": brand,
-        "quantity": quantity,
-        "expiry": str(expiry_date),
-        "location": location_data
-    })
+    # This now uses a request-response to confirm the DB actually saved it
+    response = mqtt_request_response(
+        request_topic="storage_room/update",
+        response_topic="storage_room/response/add_status",
+        payload={
+            "action": "add_inventory",
+            "barcode": barcode,
+            "name": name,
+            "brand": brand,
+            "quantity": quantity,
+            "expiry": str(expiry_date),
+            "location": location_data
+        }
+    )
+    return response.get("success", False) if response else False

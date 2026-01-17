@@ -262,22 +262,66 @@ class SpecifyLocation(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-        ctk.CTkLabel(self, text="Select Location", font=("Arial", 40)).pack(pady=30)
-        ctk.CTkLabel(self, text="Please Scan Location ID", font=("Arial", 30)).pack(pady=60)
+        
+        # UI Elements
+        ctk.CTkLabel(self, text="Select Location", font=("Arial", 40, "bold")).pack(pady=30)
+        
+        # Status label helps the user understand if the scan failed
+        self.status_label = ctk.CTkLabel(self, text="Please Scan Location ID", 
+                                         font=("Arial", 30), text_color="white")
+        self.status_label.pack(pady=40)
+        
         self.barcode_entry = ctk.CTkEntry(self, width=600, height=80, font=("Arial", 30), justify="center")
-        self.barcode_entry.pack(pady=0)
+        self.barcode_entry.pack(pady=10)
+        
+        # Bind the scanner (Enter key)
         self.barcode_entry.bind('<Return>', self.process_scan)
-        back_btn = ctk.CTkButton(self, text="Cancel", fg_color="#f72a2a", command=controller.discard_and_home, width=120, height=60, font=("Arial", 30))
+        
+        # Navigation
+        back_btn = ctk.CTkButton(self, text="Cancel", fg_color="#f72a2a", 
+                                 command=self.controller.discard_and_home, 
+                                 width=150, height=70, font=("Arial", 30))
         back_btn.pack(pady=50)
+        
+        # Focus the entry when the page appears
         self.bind("<Visibility>", lambda e: self.barcode_entry.focus_set())
         
     def process_scan(self, event):
+        # Get scanned value
         barcode = self.barcode_entry.get().strip()
-        self.controller.current_item["location"] = barcode
-        self.controller.show_frame("ConfirmAddPage")
-    
+        
+        if not barcode:
+            return
+
+        # Visual feedback: let the user know we are checking
+        self.status_label.configure(text="Checking Location...", text_color="yellow")
+        self.update()
+
+        # Real-time check: Ask the backend if this location exists
+        # This calls find_id_at_location in your db_operations_backend
+        location_id = db_ops.find_id_at_location(barcode)
+        
+        if location_id is not None:
+            # Success: Save to briefcase and move forward
+            print(f"DEBUG: Location {barcode} validated (ID: {location_id})")
+            self.controller.current_item["location"] = barcode
+            
+            # Reset label for next time and move to summary
+            self.status_label.configure(text="Please Scan Location ID", text_color="white")
+            self.controller.show_frame("ConfirmAddPage")
+        else:
+            # Failure: Location not in database
+            print(f"DEBUG: Location {barcode} not found in database.")
+            self.status_label.configure(text="INVALID LOCATION - Try Again", text_color="#f72a2a")
+            self.barcode_entry.delete(0, 'end')
+            # Briefly flash the entry red if you want extra polish
+            self.barcode_entry.configure(fg_color="#4d1616")
+            self.after(1000, lambda: self.barcode_entry.configure(fg_color=["#F9F9FA", "#343638"]))
+
     def clear(self):
+        """Called by discard_and_home to reset the page"""
         self.barcode_entry.delete(0, 'end')
+        self.status_label.configure(text="Please Scan Location ID", text_color="white")
 
 class ConfirmAddPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
