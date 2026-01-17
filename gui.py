@@ -197,7 +197,7 @@ class NameInputPage(ctk.CTkFrame):
         self.entry.delete(0, 'end') # Clean up for next time
         self.controller.show_frame("BrandInputPage")
 
-# Page 2.2: Prouct Branc input
+# Page 2.2: Prouct Brand input
 class BrandInputPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -222,13 +222,7 @@ class QuantityPage(ctk.CTkFrame): #TODO
         super().__init__(parent)
         self.controller = controller
         
-        ctk.CTkLabel(self, text="How many would you like to add?", font=("Arial", 40)).pack(pady=30)
-        
-    def __init__(self, parent, controller):
-        super().__init__(parent)
-        self.controller = controller
-        
-        ctk.CTkLabel(self, text="Enter Brand", font=("Arial", 40)).pack(pady=10)
+        ctk.CTkLabel(self, text="Enter Quantity", font=("Arial", 40)).pack(pady=10)
         
         self.entry = ctk.CTkEntry(self, width=700, height=60, font=("Arial", 30), justify="center")
         self.entry.pack(pady=10)
