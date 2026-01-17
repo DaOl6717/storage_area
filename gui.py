@@ -1,6 +1,7 @@
 from datetime import datetime
 import customtkinter as ctk
 import db_operations_backend as db_ops
+import json
 
 # ADD PRODUCT FLOW
 # Barcode scan page
@@ -9,9 +10,9 @@ import db_operations_backend as db_ops
     # Name input page
     # Brand input page
 
-# Expiry date page TODO
-# Quantity page TODO
-# Location scan page TODO
+# Expiry date page
+# Quantity page
+# Location scan page
 # Confirm Add TODO
 # Back to start page TODO
 
@@ -54,7 +55,7 @@ class App(ctk.CTk):
         self.frames = {}
 
         # Initialize all pages
-        for PageClass in (MainMenu, AddPage, RemovePage, QuantityPage, NameInputPage, BrandInputPage, ExpiryInputPage):
+        for PageClass in (MainMenu, AddPage, RemovePage, QuantityPage, NameInputPage, BrandInputPage, ExpiryInputPage, SpecifyLocation, ConfirmAddPage):
             page_name = PageClass.__name__
             frame = PageClass(parent=self, controller=self)
             self.frames[page_name] = frame
@@ -66,6 +67,10 @@ class App(ctk.CTk):
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
+    
+        if hasattr(frame, "refresh"): # Check if refresh function exists
+            frame.refresh()
+        
         frame.tkraise()
         
 # Custom on screen keyboard
@@ -172,7 +177,7 @@ class AddPage(ctk.CTkFrame):
         else:
             self.controller.show_frame("NameInputPage")
         
-# Page 2.1: Prouct Name input
+# Page 2.1.1: Prouct Name input
 class NameInputPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -192,7 +197,7 @@ class NameInputPage(ctk.CTkFrame):
         self.entry.delete(0, 'end') # Clean up for next time
         self.controller.show_frame("BrandInputPage")
 
-# Page 2.2: Prouct Brand input
+# Page 2.1.2: Prouct Brand input
 class BrandInputPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -211,7 +216,7 @@ class BrandInputPage(ctk.CTkFrame):
         self.entry.delete(0, 'end')
         self.controller.show_frame("ExpiryInputPage")
 
-# Page 2.3: Expiry Date Input
+# Page 2.2: Expiry Date Input
 class ExpiryInputPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -282,7 +287,7 @@ class ExpiryInputPage(ctk.CTkFrame):
         self.controller.current_item["expiry"] = date_str
         self.controller.show_frame("QuantityPage")
 
-# Page 2.4: Quantity Input
+# Page 2.3: Quantity Input
 class QuantityPage(ctk.CTkFrame): #TODO
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -299,7 +304,115 @@ class QuantityPage(ctk.CTkFrame): #TODO
     def next_step(self):
         self.controller.current_item["quantity"] = int(self.entry.get())
         self.entry.delete(0, 'end')
-        self.controller.show_frame("QuantityPage")
+        self.controller.show_frame("SpecifyLocation")
+
+# Page 3: Location Scan Page
+class SpecifyLocation(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        ctk.CTkLabel(self, text="Select Location", font=("Arial", 40)).pack(pady=30)
+        self.status_label = ctk.CTkLabel(self, text="Please Scan Location ID", font=("Arial", 30)).pack(pady=60)
+        
+        self.barcode_entry = ctk.CTkEntry(self, width=600, height=80, font=("Arial", 30), justify="center")
+        self.barcode_entry.pack(pady=0)
+        self.barcode_entry.bind('<Return>', self.process_scan)
+        
+        back_btn = ctk.CTkButton(self, text="Cancel", fg_color="#f72a2a", command=lambda: controller.show_frame("MainMenu"), width=120, height=60, font=("Arial", 30))
+        back_btn.pack(pady=50)
+        
+        self.bind("<Visibility>", lambda e: self.barcode_entry.focus_set())
+        
+    def process_scan(self, event):
+        barcode = self.barcode_entry.get().strip()
+        self.controller.current_item["location"] = barcode
+        
+        self.controller.show_frame("ConfirmAddPage")
+
+# Page 4: Confirm and Send to MQTT
+class ConfirmAddPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+
+        ctk.CTkLabel(self, text="Summary", font=("Arial", 50, "bold")).pack(pady=20)
+
+        self.data_container = ctk.CTkFrame(self, fg_color="transparent")
+        self.data_container.pack(expand=True, fill="both", padx=40)
+
+        button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        button_frame.pack(side="bottom", pady=40)
+
+        self.back_btn = ctk.CTkButton(button_frame, text="Discard", width=250, height=90, 
+                                      fg_color="#f72a2a", font=("Arial", 30),
+                                      command=self.discard_and_home)
+        self.back_btn.pack(side="left", padx=20)
+
+        self.finish_btn = ctk.CTkButton(button_frame, text="Finish", width=400, height=90, 
+                                        fg_color="#23d023", font=("Arial", 35),
+                                        command=self.send_to_system)
+        self.finish_btn.pack(side="left", padx=20)
+
+    def refresh(self):
+        # Clear previous data
+        for widget in self.data_container.winfo_children():
+            widget.destroy()
+
+        # Get data from the briefcase
+        data = self.controller.current_item
+        print(f"DEBUG: Summary Page drawing data: {data}")
+
+        display_names = {
+            "barcode": "Barcode:",
+            "name": "Product:",
+            "brand": "Brand:",
+            "quantity": "Quantity:",
+            "location": "Location:",
+            "expiry": "Expiry Date:"
+        }
+
+        row = 0
+        for key, display_text in display_names.items():
+            value = data.get(key)
+            
+            if value is not None and str(value).strip() != "":
+                ctk.CTkLabel(self.data_container, text=display_text, 
+                             font=("Arial", 25, "bold"), 
+                             text_color="gray70").grid(row=row, column=0, sticky="e", padx=10, pady=5)
+                
+                ctk.CTkLabel(self.data_container, text=str(value), 
+                             font=("Arial", 28)).grid(row=row, column=1, sticky="w", padx=10, pady=5)
+                row += 1
+        
+        self.data_container.grid_columnconfigure((0,1), weight=1)
+
+    def send_to_system(self):
+        """Packages non-empty data into JSON and sends to MQTT broker."""
+        try:
+            # Filter out None values for the final payload
+            clean_data = {k: v for k, v in self.controller.current_item.items() if v is not None}
+            payload = json.dumps(clean_data)
+
+            # Attempt to publish
+            topic = "storage/inventory/add"
+            result = self.controller.mqtt_client.publish(topic, payload)
+            
+            # Check if MQTT publish was successful
+            if result.rc == 0:
+                print(f"Successfully sent to MQTT: {payload}")
+                self.discard_and_home() 
+            else:
+                print(f"MQTT Error Code: {result.rc}")
+                
+        except Exception as e:
+            print(f"Critical Error in MQTT Publish: {e}")
+
+    def discard_and_home(self):
+        for key in self.controller.current_item:
+            self.controller.current_item[key] = None
+        
+        self.controller.show_frame("MainMenu")
 
 # --- Page 3: Stats ---
 class RemovePage(ctk.CTkFrame):
