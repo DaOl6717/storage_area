@@ -217,66 +217,80 @@ class ExpiryInputPage(ctk.CTkFrame):
         super().__init__(parent)
         self.controller = controller
         
-        # Internal state
-        self.sel_year = str(datetime.now().year)
-        self.sel_month = f"{datetime.now().month:02d}"
-        self.sel_day = "01"
+        # Data lists
+        self.years = [str(datetime.now().year + i) for i in range(11)]
+        self.months = [f"{i:02d}" for i in range(1, 13)]
+        self.days = [f"{i:02d}" for i in range(1, 32)]
+
+        # Track current index for each column
+        self.y_idx = 0
+        self.m_idx = datetime.now().month - 1
+        self.d_idx = 0
 
         ctk.CTkLabel(self, text="Select Expiry Date", font=("Arial", 40)).pack(pady=10)
 
+        # Main Container
         self.columns_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.columns_frame.pack(expand=True, fill="both", padx=20)
 
-        self.year_frame = self.create_scroll_column("Year", [str(datetime.now().year + i) for i in range(10)], self.set_year)
-        self.year_frame.grid(row=0, column=0, padx=10, sticky="nsew")
-        months = [f"{i:02d}" for i in range(1, 13)]
-        self.month_frame = self.create_scroll_column("Month", months, self.set_month)
-        self.month_frame.grid(row=0, column=1, padx=10, sticky="nsew")
-        days = [f"{i:02d}" for i in range(1, 32)]
-        self.day_frame = self.create_scroll_column("Day", days, self.set_day)
-        self.day_frame.grid(row=0, column=2, padx=10, sticky="nsew")
+        # Create the 3 Selectors
+        self.year_label = self.create_selector("Year", self.years, self.y_idx, 0, "year")
+        self.month_label = self.create_selector("Month", self.months, self.m_idx, 1, "month")
+        self.day_label = self.create_selector("Day", self.days, self.d_idx, 2, "day")
 
         self.columns_frame.grid_columnconfigure((0,1,2), weight=1)
 
-        self.summary_label = ctk.CTkLabel(self, text=f"Selected: {self.sel_year}-{self.sel_month}-{self.sel_day}", font=("Arial", 25))
-        self.summary_label.pack(pady=10)
+        # Summary and Finish
+        self.summary_label = ctk.CTkLabel(self, text="", font=("Arial", 30), fg_color="gray20", corner_radius=10, width=400)
+        self.summary_label.pack(pady=20)
+        self.update_summary()
 
-        self.ok_btn = ctk.CTkButton(self, text="Confirm Date", width=300, height=80, fg_color="#23d023", font=("Arial", 30),
+        self.ok_btn = ctk.CTkButton(self, text="Confirm & Next", width=400, height=90, 
+                                   fg_color="#23d023", font=("Arial", 35),
                                    command=self.finish)
         self.ok_btn.pack(pady=20)
 
-    def create_scroll_column(self, title, items, command):
+    def create_selector(self, title, items, start_idx, col, type_name):
         container = ctk.CTkFrame(self.columns_frame)
-        ctk.CTkLabel(container, text=title, font=("Arial", 20, "bold")).pack(pady=5)
+        container.grid(row=0, column=col, padx=10, sticky="nsew")
         
-        scroll = ctk.CTkScrollableFrame(container, width=150, height=300)
-        scroll.pack(expand=True, fill="both")
+        ctk.CTkLabel(container, text=title, font=("Arial", 25, "bold")).pack(pady=5)
+        
+        # Up Button
+        ctk.CTkButton(container, text="▲", width=120, height=70, font=("Arial", 30),
+                      command=lambda: self.change_val(type_name, -1)).pack(pady=5)
+        
+        # The Current Selection Display
+        lbl = ctk.CTkLabel(container, text=items[start_idx], font=("Arial", 40, "bold"), 
+                           fg_color="gray30", corner_radius=5, width=120, height=80)
+        lbl.pack(pady=10)
+        
+        # Down Button
+        ctk.CTkButton(container, text="▼", width=120, height=70, font=("Arial", 30),
+                      command=lambda: self.change_val(type_name, 1)).pack(pady=5)
+        
+        return lbl
 
-        for item in items:
-            btn = ctk.CTkButton(scroll, text=item, font=("Arial", 20), height=50,
-                                fg_color="gray25", command=lambda i=item, c=command: c(i))
-            btn.pack(pady=2, fill="x")
-        return container
-
-    def set_year(self, val): 
-        self.sel_year = val
-        self.update_summary()
-
-    def set_month(self, val): 
-        self.sel_month = val
-        self.update_summary()
-
-    def set_day(self, val): 
-        self.sel_day = val
+    def change_val(self, type_name, delta):
+        if type_name == "year":
+            self.y_idx = (self.y_idx + delta) % len(self.years)
+            self.year_label.configure(text=self.years[self.y_idx])
+        elif type_name == "month":
+            self.m_idx = (self.m_idx + delta) % len(self.months)
+            self.month_label.configure(text=self.months[self.m_idx])
+        elif type_name == "day":
+            self.d_idx = (self.d_idx + delta) % len(self.days)
+            self.day_label.configure(text=self.days[self.d_idx])
+        
         self.update_summary()
 
     def update_summary(self):
-        self.summary_label.configure(text=f"Selected: {self.sel_year}-{self.sel_month}-{self.sel_day}")
+        date_str = f"{self.years[self.y_idx]}-{self.months[self.m_idx]}-{self.days[self.d_idx]}"
+        self.summary_label.configure(text=f"Selected: {date_str}")
 
     def finish(self):
-        date_str = f"{self.sel_year}-{self.sel_month}-{self.sel_day}"
+        date_str = f"{self.years[self.y_idx]}-{self.months[self.m_idx]}-{self.days[self.d_idx]}"
         self.controller.current_item["expiry"] = date_str
-        # Navigate to the next page
         self.controller.show_frame("QuantityPage")
 
 # Page 2.4: Quantity Input
