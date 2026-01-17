@@ -2,11 +2,11 @@ import customtkinter as ctk
 import db_operations_backend as db_ops
 
 # ADD PRODUCT FLOW
-# Barcode scan page TODO
+# Barcode scan page
 
 # If barcode not in db:
-    # Name input page TODO
-    # Brand input page TODO
+    # Name input page
+    # Brand input page
 
 # Expiry date page TODO
 # Quantity page TODO
@@ -91,7 +91,40 @@ class TouchKeyboard(ctk.CTkFrame):
         ctrl_frame = ctk.CTkFrame(self, fg_color="transparent")
         ctrl_frame.pack(pady=10)
 
-        ctk.CTkButton(ctrl_frame, text="⌫", width=120, height=70, fg_color="#d35400",
+        ctk.CTkButton(ctrl_frame, text="«", width=120, height=70, fg_color="#d35400",
+                      command=lambda: self.target_entry.delete(len(self.target_entry.get())-1, "end")).pack(side="left", padx=5)
+        
+        ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=70,
+                      command=lambda: self.target_entry.insert("insert", " ")).pack(side="left", padx=5)
+
+        ctk.CTkButton(ctrl_frame, text="»", width=120, height=70, fg_color="#23d023",
+                      command=enter_command).pack(side="left", padx=5)
+
+# Custom on screen numpad
+class TouchNumpad(ctk.CTkFrame):
+    def __init__(self, parent, target_entry, enter_command):
+        super().__init__(parent)
+        self.target_entry = target_entry
+        
+        keys = [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+            ['', '0', '']
+        ]
+
+        for row in keys:
+            row_frame = ctk.CTkFrame(self, fg_color="transparent")
+            row_frame.pack(pady=2)
+            for key in row:
+                ctk.CTkButton(row_frame, text=key, width=70, height=70, font=("Arial", 22),
+                              command=lambda k=key: self.target_entry.insert("insert", k)).pack(side="left", padx=2)
+
+        # Controls
+        ctrl_frame = ctk.CTkFrame(self, fg_color="transparent")
+        ctrl_frame.pack(pady=10)
+
+        ctk.CTkButton(ctrl_frame, text="«", width=120, height=70, fg_color="#d35400",
                       command=lambda: self.target_entry.delete(len(self.target_entry.get())-1, "end")).pack(side="left", padx=5)
         
         ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=70,
@@ -143,18 +176,6 @@ class AddPage(ctk.CTkFrame):
             self.controller.show_frame("NameInputPage")
         
         self.controller.current_item["barcode"] = barcode
-
-class QuantityPage(ctk.CTkFrame): #TODO
-    def __init__(self, parent, controller):
-        super().__init__(parent)
-        self.controller = controller
-        
-        ctk.CTkLabel(self, text="How many would you like to add?", font=("Arial", 40)).pack(pady=30)
-        
-        
-        
-        back_btn = ctk.CTkButton(self, text="Cancel", fg_color="#f72a2a", command=lambda: controller.show_frame("MainMenu"), width=120, height=60, font=("Arial", 30))
-        back_btn.pack(pady=50)
         
 # Page 2.1: Prouct Name input
 class NameInputPage(ctk.CTkFrame):
@@ -195,6 +216,30 @@ class BrandInputPage(ctk.CTkFrame):
         self.entry.delete(0, 'end')
         self.controller.show_frame("QuantityPage")
 
+# Page 2.3: Quantity Input
+class QuantityPage(ctk.CTkFrame): #TODO
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        ctk.CTkLabel(self, text="How many would you like to add?", font=("Arial", 40)).pack(pady=30)
+        
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        ctk.CTkLabel(self, text="Enter Brand", font=("Arial", 40)).pack(pady=10)
+        
+        self.entry = ctk.CTkEntry(self, width=700, height=60, font=("Arial", 30), justify="center")
+        self.entry.pack(pady=10)
+        
+        self.kb = TouchNumpad(self, self.entry, self.next_step)
+        self.kb.pack(pady=10)
+
+    def next_step(self):
+        self.controller.current_item["quantity"] = int(self.entry.get())
+        self.entry.delete(0, 'end')
+        self.controller.show_frame("QuantityPage")
 
 # --- Page 3: Stats ---
 class RemovePage(ctk.CTkFrame):
