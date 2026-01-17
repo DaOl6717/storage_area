@@ -91,13 +91,13 @@ class TouchKeyboard(ctk.CTkFrame):
         ctrl_frame = ctk.CTkFrame(self, fg_color="transparent")
         ctrl_frame.pack(pady=10)
 
-        ctk.CTkButton(ctrl_frame, text="«", width=120, height=70, fg_color="#d35400",
+        ctk.CTkButton(ctrl_frame, text="«", width=120, height=70, font=("Arial", 40), fg_color="#d35400",
                       command=lambda: self.target_entry.delete(len(self.target_entry.get())-1, "end")).pack(side="left", padx=5)
         
-        ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=70,
+        ctk.CTkButton(ctrl_frame, text="SPACE", width=300, height=70, font=("Arial", 32),
                       command=lambda: self.target_entry.insert("insert", " ")).pack(side="left", padx=5)
 
-        ctk.CTkButton(ctrl_frame, text="»", width=120, height=70, fg_color="#23d023",
+        ctk.CTkButton(ctrl_frame, text="»", width=120, font=("Arial", 40), height=70, fg_color="#23d023",
                       command=enter_command).pack(side="left", padx=5)
 
 # Custom on screen numpad
@@ -119,11 +119,11 @@ class TouchNumpad(ctk.CTkFrame):
             for key in row:
                 
                 if key == "«":
-                    ctk.CTkButton(row_frame, text="«", width=70, height=70, fg_color="#d35400",
+                    ctk.CTkButton(row_frame, text="«", width=70, height=70, font=("Arial", 40), fg_color="#d35400",
                         command=lambda: self.target_entry.delete(len(self.target_entry.get())-1, "end")).pack(side="left", padx=5)
                     continue
                 elif key == "»":
-                    ctk.CTkButton(row_frame, text="»", width=70, height=70, fg_color="#23d023",
+                    ctk.CTkButton(row_frame, text="»", width=70, height=70, font=("Arial", 40), fg_color="#23d023",
                         command=enter_command).pack(side="left", padx=5)
                     continue
                     
